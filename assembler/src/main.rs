@@ -181,7 +181,6 @@ fn parse_lui(line: &str) {
 }
 
 fn register(reg: &String) -> u32 {
-    println!("{}", reg);
     match reg.as_str() {
         "x0"  | "zero"       => 0,
         "x1"  | "ra"         => 1,

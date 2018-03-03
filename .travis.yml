@@ -1,0 +1,8 @@
+language: rust
+rust:
+  - stable
+env:
+  - TEST_DIR=assembler
+script: cd $TEST_DIR && ./test.sh
+notifications:
+  email: false
