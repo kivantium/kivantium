@@ -4,6 +4,6 @@ rust:
 env:
   - TEST_DIR=assembler
   - TEST_DIR=simulator
-script: cd $TEST_DIR && ./test.sh
+script: ./test.sh && cd $TEST_DIR && ./test.sh
 notifications:
   email: false

@@ -23,7 +23,6 @@ fn main() {
         let mut opcode = l.split_whitespace().nth(0).unwrap().to_string();
         if opcode.chars().rev().nth(0).unwrap() == ':' {
             opcode.pop();
-            println!("{}, {}", opcode, address);
             symbols.insert(opcode, address);
         } else {
             parse_line(&l, &symbols);
@@ -52,8 +51,25 @@ fn parse_line(line: &str, symbols: &HashMap<String, u32>) {
         "jal"  => parse_jal(&line, &symbols),
         "jalr" => parse_jalr(&line, &symbols),
         "lui" => parse_lui(&line),
+        "print_int" | "exit" => parse_custom(&line),
 
         _ => panic!("Unknown opcode!"),
+    }
+}
+
+fn parse_custom(line: &str) {
+    let opcode = line.split_whitespace().nth(0).unwrap();
+    match opcode {
+        "print_int" => {
+            let mut rd = line.split_whitespace().nth(1).unwrap().to_string();
+            println!("00000000000000000001{:05b}0001011", register(&rd));
+        }
+        "exit" => {
+            println!("00000000000000000000000000001011");
+        }
+        _ => {
+            panic!("Unknown custom instruction!");
+        }
     }
 }
 
@@ -182,38 +198,38 @@ fn parse_lui(line: &str) {
 
 fn register(reg: &String) -> u32 {
     match reg.as_str() {
-        "x0"  | "zero"       => 0,
-        "x1"  | "ra"         => 1,
-        "x2"  | "sp"         => 2,
-        "x3"  | "gp"         => 3,
-        "x4"  | "tp"         => 4,
-        "x5"  | "t0"         => 5,
-        "x6"  | "t1"         => 6,
-        "x7"  | "t2"         => 7,
-        "x8"  | "s0" | "fp"  => 8,
-        "x9"  | "s1"         => 9,
-        "x10" | "a0"         => 10,
-        "x11" | "a1"         => 11,
-        "x12" | "a2"         => 12,
-        "x13" | "a3"         => 13,
-        "x14" | "a4"         => 14,
-        "x15" | "a5"         => 15,
-        "x16" | "a6"         => 16,
-        "x17" | "a7"         => 17,
-        "x18" | "s2"         => 18,
-        "x19" | "s3"         => 19,
-        "x20" | "s4"         => 20,
-        "x21" | "s5"         => 21,
-        "x22" | "s6"         => 22,
-        "x23" | "s7"         => 23,
-        "x24" | "s8"         => 24,
-        "x25" | "s9"         => 25,
-        "x26" | "s10"        => 26,
-        "x27" | "s11"        => 27,
-        "x28" | "t3"         => 28,
-        "x29" | "t4"         => 29,
-        "x30" | "t5"         => 30,
-        "x31" | "t6"         => 31,
+        "$x0"  | "$zero"       => 0,
+        "$x1"  | "$ra"         => 1,
+        "$x2"  | "$sp"         => 2,
+        "$x3"  | "$gp"         => 3,
+        "$x4"  | "$tp"         => 4,
+        "$x5"  | "$t0"         => 5,
+        "$x6"  | "$t1"         => 6,
+        "$x7"  | "$t2"         => 7,
+        "$x8"  | "$s0" | "$fp"  => 8,
+        "$x9"  | "$s1"         => 9,
+        "$x10" | "$a0"         => 10,
+        "$x11" | "$a1"         => 11,
+        "$x12" | "$a2"         => 12,
+        "$x13" | "$a3"         => 13,
+        "$x14" | "$a4"         => 14,
+        "$x15" | "$a5"         => 15,
+        "$x16" | "$a6"         => 16,
+        "$x17" | "$a7"         => 17,
+        "$x18" | "$s2"         => 18,
+        "$x19" | "$s3"         => 19,
+        "$x20" | "$s4"         => 20,
+        "$x21" | "$s5"         => 21,
+        "$x22" | "$s6"         => 22,
+        "$x23" | "$s7"         => 23,
+        "$x24" | "$s8"         => 24,
+        "$x25" | "$s9"         => 25,
+        "$x26" | "$s10"        => 26,
+        "$x27" | "$s11"        => 27,
+        "$x28" | "$t3"         => 28,
+        "$x29" | "$t4"         => 29,
+        "$x30" | "$t5"         => 30,
+        "$x31" | "$t6"         => 31,
         _                    => panic!("Unknown register name {}", reg),
     }
 }

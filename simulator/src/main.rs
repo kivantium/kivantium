@@ -8,6 +8,7 @@ struct State {
     register: [u32; 32],
     dmem: Vec<u32>,
     imem: Vec<u32>,
+    is_exit: bool,
 }
 
 impl State {
@@ -17,6 +18,7 @@ impl State {
             register: [0; 32],
             dmem: vec![0; 1024],
             imem: instructions,
+            is_exit: false,
         }
     }
     fn show_register(&self) {
@@ -25,10 +27,22 @@ impl State {
         }
     }
 
-    fn step(&mut self) -> Result<u32, u32>{
+    fn is_exit(&self) -> bool {
+        if self.is_exit == true{
+            return true;
+        }
         let addr = (self.address / 4) as usize;
         if addr >= self.imem.len() {
-            return Err(0);
+            true
+        } else {
+            false
+        }
+    }
+
+    fn step(&mut self) {
+        let addr = (self.address / 4) as usize;
+        if addr >= self.imem.len() {
+            panic!("PC exceeded the length of instructions!");
         }
         let instruction = self.imem[addr];
         let opcode = instruction & 0x7f;
@@ -41,10 +55,29 @@ impl State {
             0b1100011 => self.exec_branch(instruction),
             0b1100111 => self.exec_jalr(instruction),
             0b1101111 => self.exec_jal(instruction),
+            0b0001011 => self.exec_custom(instruction),
             _         => panic!("Unsupported instruction"),
         }
-        Ok(0)
     }
+
+    fn exec_custom(&mut self, instruction: u32) {
+        let funct3 = (instruction & 0x7000) >> 12;
+        let rd =     (instruction & 0xf80) >> 7;
+        match funct3 {
+            0b000 => {
+                self.is_exit = true;
+                println!("Exit.");
+            }
+            0b001 => {
+                println!("print_int: {}", self.register[rd as usize]);
+                self.address += 4;
+            }
+            _ => {
+                panic!("Unknown custom command!");
+            }
+        }
+    }
+
 
     fn exec_load(&mut self, instruction: u32) {
         self.address += 4;
@@ -114,13 +147,9 @@ fn main() {
     }
     let mut state = State::init(instructions);
     loop {
-        match state.step() {
-            Ok(_) => (),
-            Err(e) => {
-                if e == 0 {
-                    std::process::exit(0);
-                }
-            }
+        state.step();
+        if state.is_exit() {
+            break;
         }
     }
 }

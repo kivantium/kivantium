@@ -1,1 +1,1 @@
-addi x0, x1, 1
+addi $x0, $x1, 1

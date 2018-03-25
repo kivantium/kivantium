@@ -1,5 +1,5 @@
 [package]
-name = "assembler"
+name = "kasm"
 version = "0.1.0"
 authors = ["Kiyoshi Kawana <kivantium@gmail.com>"]
 

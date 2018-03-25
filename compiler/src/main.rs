@@ -73,7 +73,7 @@ pub enum Node {
     FuncDef { name: String, return_type: PrimType, body: Vec<Node> },
     FuncCall { name: String, args: Vec<Node> },
     Expr {value: Vec<Node> },
-    IntConst(i64),
+    IntConst{n: i64},
 }
 
 pub fn parser(tokens: Vec<Token>) -> Result<Node, String> {
@@ -128,7 +128,7 @@ pub fn parser(tokens: Vec<Token>) -> Result<Node, String> {
 
     fn walk(token: Token, token_iter: &mut Peekable<IntoIter<Token>>) -> Result<Node, String> {
         match token {
-            Token::Integer(value) => Ok(Node::IntConst(value)),
+            Token::Integer(value) => Ok(Node::IntConst{n: value}),
             Token::Id(name) => { // function call
                 let func_name = name.clone();
                 if let Some(Token::LeftParen) = token_iter.next() {
@@ -173,6 +173,66 @@ pub fn parser(tokens: Vec<Token>) -> Result<Node, String> {
     Ok(Node::Program{body: body})
 }
 
+/*#[derive(Debug,PartialEq,Clone)]
+pub enum Node {
+    Program { body: Vec<Node> },
+    FuncDef { name: String, return_type: PrimType, body: Vec<Node> },
+    FuncCall { name: String, args: Vec<Node> },
+    Expr {value: Vec<Node> },
+    IntConst(i64),
+}*/
+
+fn generate_code(program: Node) {
+    match program {
+        Node::Program{body} => {
+            for ast in body {
+                translate_ast(ast);
+            }
+        }
+        _ => {
+            panic!("The root of the AST must be program.");
+        }
+    }
+}
+
+fn translate_ast(ast: Node) {
+    match ast {
+        Node::FuncDef{name, return_type, body} => {
+            println!("{}:", name);
+            for a in body {
+                translate_ast(a);
+            }
+            if name == "main" {
+                assert_eq!(return_type, PrimType::Int);
+                println!("exit");
+            } else {
+                println!("jal $ra");
+            }
+        }
+        Node::FuncCall{name, args} => {
+            for arg in args {
+                translate_ast(arg);
+            }
+            if name == "print_int" {
+                println!("print_int $a0");
+            } else {
+                println!("jalr {}", name);
+            }
+        }
+        Node::Expr{value} => {
+            for v in value {
+                translate_ast(v);
+            }
+        }
+        Node::IntConst{n} => {
+            println!("addi $a0, $zero, {}", n);
+        }
+        _ => {
+            panic!("Unknown node: {:?}", ast);
+        }
+    }
+}
+
 fn main() {
     // argument check
     let args: Vec<_> = env::args().collect();
@@ -191,11 +251,6 @@ fn main() {
     f.read_to_string(&mut src).expect("File read error");
 
     let lex_result = lexer(&src).unwrap();
-    println!("Result of lexical analysis:");
-    for token in &lex_result {
-        println!("{:?}", token);
-    }
-    println!("\nGenerated AST:");
     let parse_result = parser(lex_result);
-    println!("{:?}", &parse_result);
+    generate_code(parse_result.unwrap());
 }
